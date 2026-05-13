@@ -19,6 +19,19 @@ async function main() {
 
   console.log(adminRole.id === 1 ? 'Admin role already exists' : 'Created admin role:', adminRole.roleName);
 
+  if (!process.env.SEED_ADMIN_PASSWORD) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'SEED_ADMIN_PASSWORD environment variable is required in production. ' +
+        'Refusing to seed with a default password.'
+      );
+    }
+    console.warn(
+      'WARNING: SEED_ADMIN_PASSWORD not set. Using development-only default password. ' +
+      'Never run this in production without setting SEED_ADMIN_PASSWORD.'
+    );
+  }
+
   const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
   const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
