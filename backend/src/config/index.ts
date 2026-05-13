@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -16,6 +17,16 @@ const requireEnv = (key: string): string => {
   return value;
 };
 
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (secret) return secret;
+  if (isProd) {
+    throw new Error('Missing required environment variable: JWT_SECRET');
+  }
+  console.warn('JWT_SECRET not set — using random secret (tokens will not persist across restarts)');
+  return crypto.randomBytes(32).toString('hex');
+};
+
 export const config = {
   app: {
     port: parseInt(process.env.APP_PORT || '4000', 10),
@@ -30,7 +41,7 @@ export const config = {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
   },
   jwt: {
-    secret: requireEnv('JWT_SECRET'),
+    secret: getJwtSecret(),
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   log: {
