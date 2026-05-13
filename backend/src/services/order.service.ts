@@ -127,9 +127,11 @@ export class OrderService {
     }
 
     const updateData: Prisma.OrderUpdateInput = {};
+    if (data.shippingStatus !== undefined) {
+      throw new AppError('发货状态请通过发货接口操作', 400);
+    }
     if (data.orderStatus !== undefined) updateData.orderStatus = data.orderStatus;
     if (data.payStatus !== undefined) updateData.payStatus = data.payStatus;
-    if (data.shippingStatus !== undefined) updateData.shippingStatus = data.shippingStatus;
 
     if (data.payStatus === 1 && order.payStatus !== 1) {
       updateData.payTime = Math.floor(Date.now() / 1000);
@@ -163,6 +165,10 @@ export class OrderService {
 
     if (!order) {
       throw new AppError('订单不存在', 404);
+    }
+
+    if (order.orderStatus === 3) {
+      throw new AppError('已取消的订单不能发货', 400);
     }
 
     if (order.shippingStatus === 1) {
