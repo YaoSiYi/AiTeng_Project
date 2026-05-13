@@ -1,3 +1,4 @@
+import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -10,12 +11,12 @@ const app = express();
 app.use(helmet());
 app.use(cors({
   origin: config.app.isDev ? '*' : ['http://localhost:3000'],
-  credentials: true,
+  credentials: !config.app.isDev,
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use(morgan('combined', {
+app.use(morgan(config.app.isDev ? 'dev' : 'combined', {
   stream: {
     write: (message: string) => logger.info(message.trim()),
   },
@@ -25,12 +26,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    env: config.app.env,
   });
-});
-
-app.use('/api', (req, res, next) => {
-  next();
 });
 
 app.use((req, res) => {

@@ -3,21 +3,34 @@ import path from 'path';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+const isProd = process.env.APP_ENV === 'production';
+
+const requireEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    if (isProd) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return '';
+  }
+  return value;
+};
+
 export const config = {
   app: {
     port: parseInt(process.env.APP_PORT || '4000', 10),
     env: process.env.APP_ENV || 'development',
     isDev: process.env.APP_ENV === 'development',
-    isProd: process.env.APP_ENV === 'production',
+    isProd,
   },
   db: {
-    url: process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/tpshop',
+    url: requireEnv('DATABASE_URL'),
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'default-secret-change-me',
+    secret: requireEnv('JWT_SECRET'),
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
   },
   log: {

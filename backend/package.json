@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node -r tsconfig-paths/register dist/server.js",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
     "test": "jest",
@@ -25,6 +26,7 @@
     "joi": "^17.9.2",
     "jsonwebtoken": "^9.0.1",
     "morgan": "^1.10.0",
+    "tsconfig-paths": "^4.2.0",
     "winston": "^3.10.0",
     "winston-daily-rotate-file": "^4.7.1"
   },

@@ -4,15 +4,15 @@ export interface ApiResponse<T = any> {
   data: T | null;
 }
 
-export interface PaginatedResponse<T> extends ApiResponse {
-  data: {
-    list: T[];
-    total: number;
-    page: number;
-    pageSize: number;
-    totalPages: number;
-  };
+export interface PaginatedData<T> {
+  list: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
+
+export type PaginatedResponse<T> = ApiResponse<PaginatedData<T>>;
 
 export const success = <T>(data: T, message = '成功'): ApiResponse<T> => ({
   code: 200,
