@@ -111,6 +111,8 @@ model Order {
   confirmTime    Int?    @map("confirm_time")
   payName        String? @map("pay_name") @db.VarChar(120)
   shippingName   String? @map("shipping_name") @db.VarChar(120)
+  expressCode    String? @map("express_code") @db.VarChar(50)
+  expressNo      String? @map("express_no") @db.VarChar(50)
   remark         String? @db.VarChar(255)
   addTime        Int     @default(0) @map("add_time")
 

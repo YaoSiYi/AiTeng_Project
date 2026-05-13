@@ -8,6 +8,7 @@ import { logger } from './utils/logger';
 import { AppError } from './utils/errors';
 import authRoutes from './routes/auth.routes';
 import goodsRoutes from './routes/goods.routes';
+import orderRoutes from './routes/order.routes';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/goods', goodsRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
