@@ -7,6 +7,7 @@ import { config } from './config';
 import { logger } from './utils/logger';
 import { AppError } from './utils/errors';
 import authRoutes from './routes/auth.routes';
+import goodsRoutes from './routes/goods.routes';
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/goods', goodsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
