@@ -132,22 +132,23 @@ export class OrderService {
       updateData.payTime = Math.floor(Date.now() / 1000);
     }
 
-    const updated = await prisma.order.update({
-      where: { id },
-      data: updateData,
-    });
-
-    await prisma.orderAction.create({
-      data: {
-        orderId: id,
-        actionUser: operatorId,
-        actionNote: data.remark || '更新订单状态',
-        orderStatus: data.orderStatus ?? order.orderStatus,
-        payStatus: data.payStatus ?? order.payStatus,
-        shippingStatus: data.shippingStatus ?? order.shippingStatus,
-        logTime: Math.floor(Date.now() / 1000),
-      },
-    });
+    const [updated] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id },
+        data: updateData,
+      }),
+      prisma.orderAction.create({
+        data: {
+          orderId: id,
+          actionUser: operatorId,
+          actionNote: data.remark || '更新订单状态',
+          orderStatus: data.orderStatus ?? order.orderStatus,
+          payStatus: data.payStatus ?? order.payStatus,
+          shippingStatus: data.shippingStatus ?? order.shippingStatus,
+          logTime: Math.floor(Date.now() / 1000),
+        },
+      }),
+    ]);
 
     return updated;
   }
@@ -167,28 +168,29 @@ export class OrderService {
 
     const now = Math.floor(Date.now() / 1000);
 
-    const updated = await prisma.order.update({
-      where: { id },
-      data: {
-        expressCode: data.expressCode,
-        expressNo: data.expressNo,
-        shippingName: data.shippingName,
-        shippingStatus: 1,
-        shippingTime: now,
-      },
-    });
-
-    await prisma.orderAction.create({
-      data: {
-        orderId: id,
-        actionUser: operatorId,
-        actionNote: `已发货，快递公司：${data.shippingName}，快递单号：${data.expressNo}`,
-        orderStatus: order.orderStatus,
-        payStatus: order.payStatus,
-        shippingStatus: 1,
-        logTime: now,
-      },
-    });
+    const [updated] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id },
+        data: {
+          expressCode: data.expressCode,
+          expressNo: data.expressNo,
+          shippingName: data.shippingName,
+          shippingStatus: 1,
+          shippingTime: now,
+        },
+      }),
+      prisma.orderAction.create({
+        data: {
+          orderId: id,
+          actionUser: operatorId,
+          actionNote: `已发货，快递公司：${data.shippingName}，快递单号：${data.expressNo}`,
+          orderStatus: order.orderStatus,
+          payStatus: order.payStatus,
+          shippingStatus: 1,
+          logTime: now,
+        },
+      }),
+    ]);
 
     return updated;
   }

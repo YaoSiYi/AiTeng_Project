@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 export const updateOrderStatusSchema = Joi.object({
-  orderStatus: Joi.number().integer().min(0).optional(),
+  orderStatus: Joi.number().integer().valid(0, 1, 2).optional(),
   payStatus: Joi.number().integer().valid(0, 1).optional(),
   shippingStatus: Joi.number().integer().valid(0, 1).optional(),
   remark: Joi.string().allow('', null).max(255),

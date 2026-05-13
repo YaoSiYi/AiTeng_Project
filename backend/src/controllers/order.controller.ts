@@ -2,11 +2,23 @@ import { Response, NextFunction } from 'express';
 import { orderService } from '../services/order.service';
 import { success, paginate } from '../utils/response';
 import { AuthRequest } from '../types/auth.types';
+import { OrderListQuery } from '../types/order.types';
 
 export class OrderController {
   async list(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const result = await orderService.list(req.query as any);
+      const query: OrderListQuery = {
+        page: req.query.page ? Number(req.query.page) : undefined,
+        pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
+        orderNo: req.query.orderNo ? String(req.query.orderNo) : undefined,
+        orderStatus: req.query.orderStatus ? Number(req.query.orderStatus) : undefined,
+        payStatus: req.query.payStatus ? Number(req.query.payStatus) : undefined,
+        shippingStatus: req.query.shippingStatus ? Number(req.query.shippingStatus) : undefined,
+        startDate: req.query.startDate ? String(req.query.startDate) : undefined,
+        endDate: req.query.endDate ? String(req.query.endDate) : undefined,
+        keyword: req.query.keyword ? String(req.query.keyword) : undefined,
+      };
+      const result = await orderService.list(query);
       res.json(paginate(result.list, result.total, result.page, result.pageSize));
     } catch (error) {
       next(error);
