@@ -92,16 +92,10 @@ export class OrderService {
       throw new AppError('订单不存在', 404);
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: order.userId },
-    });
-
-    const address = await prisma.userAddress.findFirst({
-      where: {
-        userId: order.userId,
-        isDefault: 1,
-      },
-    });
+    const [user, address] = await Promise.all([
+      prisma.user.findUnique({ where: { id: order.userId } }),
+      prisma.userAddress.findFirst({ where: { userId: order.userId, isDefault: 1 } }),
+    ]);
 
     return {
       ...order,
@@ -126,6 +120,10 @@ export class OrderService {
 
     if (order.orderStatus === 2 && data.orderStatus !== undefined && data.orderStatus !== 2) {
       throw new AppError('已完成的订单不能修改状态', 400);
+    }
+
+    if (order.orderStatus === 3) {
+      throw new AppError('已取消的订单不能修改状态', 400);
     }
 
     const updateData: Prisma.OrderUpdateInput = {};
