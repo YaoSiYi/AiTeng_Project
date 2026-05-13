@@ -19,7 +19,9 @@ async function main() {
 
   console.log(adminRole.id === 1 ? 'Admin role already exists' : 'Created admin role:', adminRole.roleName);
 
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'admin123';
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
   const admin = await prisma.admin.upsert({
     where: { username: 'admin' },
     update: {},
@@ -27,7 +29,7 @@ async function main() {
       username: 'admin',
       password: hashedPassword,
       nickname: '管理员',
-      email: 'admin@example.com',
+      email: adminEmail,
       roleId: 1,
       status: 1,
     },
@@ -41,7 +43,7 @@ async function main() {
     create: {
       id: 1,
       levelName: '普通会员',
-      discount: 100,
+      discount: 1.0,
       description: '普通会员等级',
     },
   });
