@@ -10,20 +10,19 @@ datasource db {
 // ==================== 商品相关 ====================
 
 model Goods {
-  id           Int      @id @default(autoincrement())
-  goodsName    String   @map("goods_name") @db.VarChar(200)
-  categoryId   Int      @map("category_id")
+  id           Int      @id @default(autoincrement()) @map("goods_id")
+  goodsName    String   @map("goods_name") @db.VarChar(120)
+  categoryId   Int      @map("cat_id")
   goodsSn      String   @map("goods_sn") @db.VarChar(60)
   brandId      Int      @map("brand_id") @default(0)
-  storeCount   Int      @map("store_count") @default(0)
+  storeCount   Int      @map("store_count") @default(10)
   commentCount Int      @map("comment_count") @default(0)
   salesSum     Int      @map("sales_sum") @default(0)
   goodsContent String?  @map("goods_content") @db.LongText
-  goodsImg     String?  @map("goods_img") @db.VarChar(255)
-  originalImg  String?  @map("original_img") @db.VarChar(255)
+  goodsImg     String?  @map("original_img") @db.VarChar(255)
   isOnSale     Int      @map("is_on_sale") @default(1)
-  isDelete     Int      @map("is_delete") @default(0)
-  isBest       Int      @map("is_best") @default(0)
+  isDelete     Int      @default(0)
+  isBest       Int      @default(0)
   isNew        Int      @map("is_new") @default(0)
   isHot        Int      @map("is_hot") @default(0)
   shopPrice    Decimal  @map("shop_price") @db.Decimal(10, 2)
@@ -31,32 +30,45 @@ model Goods {
   costPrice    Decimal  @map("cost_price") @db.Decimal(10, 2)
   keywords     String?  @map("keywords") @db.VarChar(255)
   goodsRemark  String?  @map("goods_remark") @db.VarChar(255)
-  sortOrder    Int      @map("sort_order") @default(50)
-  createTime   DateTime @default(now()) @map("create_time")
-  updateTime   DateTime @updatedAt @map("update_time")
+  sortOrder    Int      @map("sort") @default(50)
+  lastUpdate   Int      @map("last_update") @default(0)
 
+  category     GoodsCategory? @relation(fields: [categoryId], references: [id])
+  brand        Brand?         @relation(fields: [brandId], references: [id])
+  images       GoodsImages[]
+  orderGoods   OrderGoods[]
+
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([goodsSn])
+  @@index([lastUpdate])
   @@map("tp_goods")
 }
 
 model GoodsCategory {
   id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(100)
+  name       String   @db.VarChar(90)
   parentId   Int      @map("parent_id") @default(0)
   sortOrder  Int      @map("sort_order") @default(50)
   isShow     Int      @map("is_show") @default(1)
-  image      String?  @db.VarChar(255)
-  createTime DateTime @default(now()) @map("create_time")
-  updateTime DateTime @updatedAt @map("update_time")
+  image      String?  @db.VarChar(512)
 
+  parent     GoodsCategory? @relation("CategoryTree", fields: [parentId], references: [id])
+  children   GoodsCategory[] @relation("CategoryTree")
+  goods      Goods[]
+
+  @@index([parentId])
   @@map("tp_goods_category")
 }
 
 model GoodsImages {
-  id       Int    @id @default(autoincrement())
+  id       Int    @id @default(autoincrement()) @map("img_id")
   goodsId  Int    @map("goods_id")
   imageUrl String @map("image_url") @db.VarChar(255)
-  sortOrder Int   @map("sort_order") @default(0)
 
+  goods    Goods @relation(fields: [goodsId], references: [id])
+
+  @@index([goodsId])
   @@map("tp_goods_images")
 }
 
@@ -66,8 +78,8 @@ model Brand {
   logo       String?  @db.VarChar(255)
   sortOrder  Int      @map("sort_order") @default(50)
   isShow     Int      @map("is_show") @default(1)
-  createTime DateTime @default(now()) @map("create_time")
-  updateTime DateTime @updatedAt @map("update_time")
+
+  goods      Goods[]
 
   @@map("tp_brand")
 }
@@ -75,18 +87,18 @@ model Brand {
 // ==================== 订单相关 ====================
 
 model Order {
-  id             Int      @id @default(autoincrement())
-  orderNo        String   @unique @map("order_no") @db.VarChar(50)
+  id             Int      @id @default(autoincrement()) @map("order_id")
+  orderNo        String   @unique @map("order_sn") @db.VarChar(20)
   userId         Int      @map("user_id")
   consignee      String   @db.VarChar(60)
   province       Int      @default(0)
   city           Int      @default(0)
   district       Int      @default(0)
   address        String?  @db.VarChar(255)
-  zipcode        String?  @db.VarChar(20)
+  zipcode        String?  @db.VarChar(60)
   tel            String?  @db.VarChar(20)
-  mobile         String?  @db.VarChar(20)
-  email          String?  @db.VarChar(100)
+  mobile         String?  @db.VarChar(60)
+  email          String?  @db.VarChar(60)
   goodsPrice     Decimal  @map("goods_price") @db.Decimal(10, 2)
   shippingPrice  Decimal  @map("shipping_price") @db.Decimal(10, 2) @default(0)
   orderAmount    Decimal  @map("order_amount") @db.Decimal(10, 2)
@@ -94,98 +106,108 @@ model Order {
   orderStatus    Int      @map("order_status") @default(0)
   payStatus      Int      @map("pay_status") @default(0)
   shippingStatus Int      @map("shipping_status") @default(0)
-  payTime        DateTime? @map("pay_time")
-  shippingTime   DateTime? @map("shipping_time")
-  confirmTime    DateTime? @map("confirm_time")
-  payName        String?  @map("pay_name") @db.VarChar(100)
-  shippingName   String?  @map("shipping_name") @db.VarChar(100)
-  invoiceNo      String?  @map("invoice_no") @db.VarChar(50)
+  payTime        Int?     @map("pay_time")
+  shippingTime   Int?     @map("shipping_time")
+  confirmTime    Int?     @map("confirm_time")
+  payName        String?  @map("pay_name") @db.VarChar(120)
+  shippingName   String?  @map("shipping_name") @db.VarChar(120)
   remark         String?  @db.VarChar(255)
-  expressNo      String?  @map("express_no") @db.VarChar(50)
-  expressCode    String?  @map("express_code") @db.VarChar(50)
-  createTime     DateTime @default(now()) @map("create_time")
-  updateTime     DateTime @updatedAt @map("update_time")
+  addTime        Int      @map("add_time") @default(0)
 
+  user           User         @relation(fields: [userId], references: [id])
+  orderGoods     OrderGoods[]
+  orderActions   OrderAction[]
+
+  @@index([userId])
+  @@index([addTime])
   @@map("tp_order")
 }
 
 model OrderGoods {
-  id          Int     @id @default(autoincrement())
+  id          Int     @id @default(autoincrement()) @map("rec_id")
   orderId     Int     @map("order_id")
   goodsId     Int     @map("goods_id")
-  goodsName   String  @map("goods_name") @db.VarChar(200)
+  goodsName   String  @map("goods_name") @db.VarChar(120)
   goodsSn     String  @map("goods_sn") @db.VarChar(60)
   goodsNum    Int     @map("goods_num") @default(1)
   marketPrice Decimal @map("market_price") @db.Decimal(10, 2)
   goodsPrice  Decimal @map("goods_price") @db.Decimal(10, 2)
-  goodsAttr   String? @map("goods_attr") @db.VarChar(500)
 
+  order       Order @relation(fields: [orderId], references: [id])
+  goods       Goods @relation(fields: [goodsId], references: [id])
+
+  @@index([orderId])
+  @@index([goodsId])
   @@map("tp_order_goods")
 }
 
 model OrderAction {
-  id             Int      @id @default(autoincrement())
+  id             Int      @id @default(autoincrement()) @map("action_id")
   orderId        Int      @map("order_id")
-  actionUser     String   @map("action_user") @db.VarChar(50)
+  actionUser     Int      @map("action_user") @default(0)
   actionNote     String?  @map("action_note") @db.VarChar(255)
   orderStatus    Int      @map("order_status") @default(0)
   payStatus      Int      @map("pay_status") @default(0)
   shippingStatus Int      @map("shipping_status") @default(0)
-  actionTime     DateTime @default(now()) @map("action_time")
+  logTime        Int      @map("log_time") @default(0)
 
+  order          Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId])
   @@map("tp_order_action")
 }
 
 // ==================== 用户相关 ====================
 
-model Users {
-  id          Int       @id @default(autoincrement())
-  nickname    String    @db.VarChar(100)
-  password    String    @db.VarChar(255)
-  paypwd      String?   @db.VarChar(255)
-  email       String?   @db.VarChar(100)
-  mobile      String?   @db.VarChar(20)
-  avatar      String?   @db.VarChar(255)
+model User {
+  id          Int       @id @default(autoincrement()) @map("user_id")
+  nickname    String?   @db.VarChar(50)
+  password    String    @db.VarChar(32)
+  paypwd      String?   @db.VarChar(32)
+  email       String    @db.VarChar(60)
+  mobile      String    @db.VarChar(20)
+  avatar      String?   @map("head_pic") @db.VarChar(255)
   sex         Int       @default(0)
-  birthday    DateTime?
-  money       Decimal   @default(0) @db.Decimal(10, 2)
+  birthday    Int       @default(0)
+  money       Decimal   @map("user_money") @default(0) @db.Decimal(10, 2)
   frozenMoney Decimal   @default(0) @map("frozen_money") @db.Decimal(10, 2)
-  rankPoints  Int       @default(0) @map("rank_points")
   payPoints   Int       @default(0) @map("pay_points")
-  regTime     DateTime  @default(now()) @map("reg_time")
-  lastLogin   DateTime? @map("last_login")
-  lastIp      String?   @map("last_ip") @db.VarChar(50)
-  userLevelId Int       @default(1) @map("user_level_id")
-  isDelete    Int       @default(0) @map("is_delete")
-  createTime  DateTime  @default(now()) @map("create_time")
-  updateTime  DateTime  @updatedAt @map("update_time")
+  regTime     Int       @default(0) @map("reg_time")
+  lastLogin   Int?      @map("last_login")
+  lastIp      String?   @map("last_ip") @db.VarChar(15)
+  isDelete    Int       @default(0)
 
+  orders      Order[]
+  addresses   UserAddress[]
+
+  @@index([email])
+  @@index([mobile])
   @@map("tp_users")
 }
 
 model UserAddress {
-  id        Int     @id @default(autoincrement())
+  id        Int     @id @default(autoincrement()) @map("address_id")
   userId    Int     @map("user_id")
   consignee String  @db.VarChar(60)
   province  Int     @default(0)
   city      Int     @default(0)
   district  Int     @default(0)
-  address   String  @db.VarChar(255)
-  zipcode   String? @db.VarChar(20)
-  tel       String? @db.VarChar(20)
-  mobile    String  @db.VarChar(20)
+  address   String  @db.VarChar(120)
+  zipcode   String? @db.VarChar(60)
+  mobile    String  @db.VarChar(60)
   isDefault Int     @default(0) @map("is_default")
 
+  user      User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
   @@map("tp_user_address")
 }
 
 model UserLevel {
-  id          Int     @id @default(autoincrement())
-  levelName   String  @map("level_name") @db.VarChar(50)
-  minPoints   Int     @map("min_points") @default(0)
-  maxPoints   Int     @map("max_points") @default(0)
-  discount    Decimal @default(1) @db.Decimal(3, 2)
-  description String? @db.VarChar(255)
+  id          Int     @id @default(autoincrement()) @map("level_id")
+  levelName   String? @map("level_name") @db.VarChar(30)
+  discount    Int     @default(0)
+  description String? @map("describe") @db.VarChar(200)
 
   @@map("tp_user_level")
 }
@@ -215,28 +237,33 @@ model Plugin {
 }
 
 model Admin {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique @db.VarChar(50)
-  password  String    @db.VarChar(255)
+  id        Int       @id @default(autoincrement()) @map("admin_id")
+  username  String    @unique @map("user_name") @db.VarChar(60)
+  password  String    @db.VarChar(32)
   nickname  String?   @db.VarChar(100)
-  email     String?   @db.VarChar(100)
+  email     String    @db.VarChar(60)
   mobile    String?   @db.VarChar(20)
   avatar    String?   @db.VarChar(255)
   roleId    Int       @map("role_id") @default(0)
-  lastLogin DateTime? @map("last_login")
-  lastIp    String?   @map("last_ip") @db.VarChar(50)
+  lastLogin Int?      @map("last_login")
+  lastIp    String?   @map("last_ip") @db.VarChar(15)
   status    Int       @default(1)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  createdAt Int       @default(0) @map("add_time")
+  updatedAt Int       @default(0)
 
+  role      AdminRole? @relation(fields: [roleId], references: [id])
+
+  @@index([roleId])
   @@map("tp_admin")
 }
 
 model AdminRole {
-  id          Int    @id @default(autoincrement())
-  roleName    String @map("role_name") @db.VarChar(50)
-  permissions String? @db.Text
-  description String? @db.VarChar(255)
+  id          Int    @id @default(autoincrement()) @map("role_id")
+  roleName    String @map("role_name") @db.VarChar(30)
+  permissions String? @map("act_list") @db.Text
+  description String? @map("role_desc") @db.VarChar(255)
+
+  admins      Admin[]
 
   @@map("tp_admin_role")
 }

@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
 
-  // 创建默认管理员角色
   const adminRole = await prisma.adminRole.upsert({
     where: { id: 1 },
     update: {},
@@ -18,9 +17,8 @@ async function main() {
     },
   });
 
-  console.log('Created admin role:', adminRole);
+  console.log(adminRole.id === 1 ? 'Admin role already exists' : 'Created admin role:', adminRole.roleName);
 
-  // 创建默认管理员
   const hashedPassword = await bcrypt.hash('admin123', 10);
   const admin = await prisma.admin.upsert({
     where: { username: 'admin' },
@@ -35,23 +33,20 @@ async function main() {
     },
   });
 
-  console.log('Created admin user:', admin);
+  console.log('Admin user:', admin.username);
 
-  // 创建默认用户等级
   const userLevel = await prisma.userLevel.upsert({
     where: { id: 1 },
     update: {},
     create: {
       id: 1,
       levelName: '普通会员',
-      minPoints: 0,
-      maxPoints: 1000,
-      discount: 1,
+      discount: 100,
       description: '普通会员等级',
     },
   });
 
-  console.log('Created user level:', userLevel);
+  console.log(userLevel.id === 1 ? 'User level already exists' : 'Created user level:', userLevel.levelName);
 
   console.log('Seeding completed!');
 }
