@@ -15,20 +15,11 @@ export class SystemService {
 
   async updateConfig(data: Record<string, string>) {
     const updates = Object.entries(data).map(async ([name, value]) => {
-      const existing = await prisma.config.findFirst({
+      return prisma.config.upsert({
         where: { name },
+        update: { value },
+        create: { name, value, remark: '' },
       });
-
-      if (existing) {
-        return prisma.config.update({
-          where: { id: existing.id },
-          data: { value },
-        });
-      } else {
-        return prisma.config.create({
-          data: { name, value, remark: '' },
-        });
-      }
     });
 
     await Promise.all(updates);

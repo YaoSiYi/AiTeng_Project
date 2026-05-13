@@ -218,7 +218,7 @@ model UserLevel {
 
 model Config {
   id     Int     @id @default(autoincrement())
-  name   String  @db.VarChar(100)
+  name   String  @unique @db.VarChar(100)
   value  String  @db.Text
   remark String? @db.VarChar(255)
 

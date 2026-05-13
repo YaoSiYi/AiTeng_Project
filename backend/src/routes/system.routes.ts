@@ -1,15 +1,17 @@
 import { Router } from 'express';
 import { systemController } from '../controllers/system.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
+import { authMiddleware, permissionMiddleware } from '../middlewares/auth.middleware';
+import { validate } from '../middlewares/validation.middleware';
+import { updateConfigSchema, updatePluginConfigSchema } from '../validators/system.validator';
 
 const router = Router();
 
 router.use(authMiddleware);
 
 router.get('/config', systemController.getConfig);
-router.put('/config', systemController.updateConfig);
+router.put('/config', permissionMiddleware(['system_manage']), validate(updateConfigSchema), systemController.updateConfig);
 router.get('/plugins', systemController.getPlugins);
-router.put('/plugins/:code', systemController.updatePluginConfig);
+router.put('/plugins/:code', permissionMiddleware(['system_manage']), validate(updatePluginConfigSchema), systemController.updatePluginConfig);
 router.get('/info', systemController.getSystemInfo);
 
 export default router;
