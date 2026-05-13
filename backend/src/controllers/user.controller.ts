@@ -1,10 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { userService } from '../services/user.service';
 import { success, paginate } from '../utils/response';
 import { UserListQuery } from '../types/user.types';
+import { AuthRequest } from '../types/auth.types';
+import { AppError } from '../utils/errors';
 
 export class UserController {
-  async list(req: Request, res: Response, next: NextFunction) {
+  async list(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const query: UserListQuery = {
         page: req.query.page ? Number(req.query.page) : undefined,
@@ -19,9 +21,10 @@ export class UserController {
     }
   }
 
-  async detail(req: Request, res: Response, next: NextFunction) {
+  async detail(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) throw new AppError('无效的用户ID', 400);
       const result = await userService.detail(id);
       res.json(success(result));
     } catch (error) {
@@ -29,9 +32,10 @@ export class UserController {
     }
   }
 
-  async update(req: Request, res: Response, next: NextFunction) {
+  async update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) throw new AppError('无效的用户ID', 400);
       const result = await userService.update(id, req.body);
       res.json(success(result, '用户信息更新成功'));
     } catch (error) {
@@ -39,9 +43,10 @@ export class UserController {
     }
   }
 
-  async delete(req: Request, res: Response, next: NextFunction) {
+  async delete(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) throw new AppError('无效的用户ID', 400);
       await userService.delete(id);
       res.json(success(null, '用户删除成功'));
     } catch (error) {
@@ -49,9 +54,10 @@ export class UserController {
     }
   }
 
-  async getUserOrders(req: Request, res: Response, next: NextFunction) {
+  async getUserOrders(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = parseInt(req.params.id);
+      if (isNaN(userId)) throw new AppError('无效的用户ID', 400);
       const page = parseInt(req.query.page as string) || 1;
       const pageSize = parseInt(req.query.pageSize as string) || 10;
       const result = await userService.getUserOrders(userId, page, pageSize);
@@ -61,7 +67,7 @@ export class UserController {
     }
   }
 
-  async getLevels(req: Request, res: Response, next: NextFunction) {
+  async getLevels(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const result = await userService.getLevels();
       res.json(success(result));
