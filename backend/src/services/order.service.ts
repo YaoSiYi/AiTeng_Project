@@ -1,14 +1,13 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { OrderListQuery, UpdateOrderStatusRequest, ShipOrderRequest } from '../types/order.types';
 import { AppError } from '../utils/errors';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export class OrderService {
   async list(query: OrderListQuery) {
     const {
       page = 1,
-      pageSize = 20,
+      pageSize: rawPageSize = 20,
       orderNo,
       orderStatus,
       payStatus,
@@ -17,6 +16,8 @@ export class OrderService {
       endDate,
       keyword,
     } = query;
+
+    const pageSize = Math.min(Math.max(rawPageSize, 1), 100);
 
     const where: Prisma.OrderWhereInput = {};
 
@@ -121,6 +122,10 @@ export class OrderService {
 
     if (!order) {
       throw new AppError('订单不存在', 404);
+    }
+
+    if (order.orderStatus === 2 && data.orderStatus !== undefined && data.orderStatus !== 2) {
+      throw new AppError('已完成的订单不能修改状态', 400);
     }
 
     const updateData: Prisma.OrderUpdateInput = {};

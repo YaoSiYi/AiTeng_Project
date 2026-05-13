@@ -3,6 +3,7 @@ import { orderService } from '../services/order.service';
 import { success, paginate } from '../utils/response';
 import { AuthRequest } from '../types/auth.types';
 import { OrderListQuery } from '../types/order.types';
+import { AppError } from '../utils/errors';
 
 export class OrderController {
   async list(req: AuthRequest, res: Response, next: NextFunction) {
@@ -28,6 +29,7 @@ export class OrderController {
   async detail(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) throw new AppError('无效的订单ID', 400);
       const result = await orderService.detail(id);
       res.json(success(result));
     } catch (error) {
@@ -38,6 +40,7 @@ export class OrderController {
   async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) throw new AppError('无效的订单ID', 400);
       const operatorId = req.user!.userId;
       const result = await orderService.updateStatus(id, req.body, operatorId);
       res.json(success(result, '订单状态更新成功'));
@@ -49,6 +52,7 @@ export class OrderController {
   async ship(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const id = parseInt(req.params.id);
+      if (isNaN(id)) throw new AppError('无效的订单ID', 400);
       const operatorId = req.user!.userId;
       const result = await orderService.ship(id, req.body, operatorId);
       res.json(success(result, '发货成功'));

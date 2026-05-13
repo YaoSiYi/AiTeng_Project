@@ -1,12 +1,12 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { GoodsListQuery, CreateGoodsRequest, UpdateGoodsRequest } from '../types/goods.types';
 import { AppError } from '../utils/errors';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 export class GoodsService {
   async list(query: GoodsListQuery) {
-    const { page = 1, pageSize = 20, keyword, categoryId, brandId, isOnSale } = query;
+    const { page = 1, pageSize: rawPageSize = 20, keyword, categoryId, brandId, isOnSale } = query;
+    const pageSize = Math.min(Math.max(rawPageSize, 1), 100);
 
     const where: Prisma.GoodsWhereInput = {
       isDelete: 0,

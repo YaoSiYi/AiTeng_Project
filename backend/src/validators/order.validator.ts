@@ -1,5 +1,17 @@
 import Joi from 'joi';
 
+export const orderListQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  pageSize: Joi.number().integer().min(1).max(100).default(20),
+  orderNo: Joi.string().max(20).optional(),
+  orderStatus: Joi.number().integer().valid(0, 1, 2).optional(),
+  payStatus: Joi.number().integer().valid(0, 1).optional(),
+  shippingStatus: Joi.number().integer().valid(0, 1).optional(),
+  startDate: Joi.date().iso().optional(),
+  endDate: Joi.date().iso().min(Joi.ref('startDate')).optional(),
+  keyword: Joi.string().max(100).optional(),
+});
+
 export const updateOrderStatusSchema = Joi.object({
   orderStatus: Joi.number().integer().valid(0, 1, 2).optional(),
   payStatus: Joi.number().integer().valid(0, 1).optional(),
