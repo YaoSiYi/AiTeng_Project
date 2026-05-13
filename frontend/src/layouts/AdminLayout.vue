@@ -36,7 +36,11 @@ const userStore = useUserStore();
 
 onMounted(async () => {
   if (userStore.token && !userStore.userInfo) {
-    await userStore.getUserInfo();
+    try {
+      await userStore.getUserInfo();
+    } catch {
+      // Already logged out in store, redirect happens via router
+    }
   }
 });
 </script>
