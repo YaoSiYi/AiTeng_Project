@@ -3,6 +3,12 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 import { Message } from '@arco-design/web-vue';
 import router from '@/router';
 
+export interface ApiResponse<T = unknown> {
+  code: number;
+  message: string;
+  data: T;
+}
+
 const service: AxiosInstance = axios.create({
   baseURL: '/api',
   timeout: 15000,
@@ -22,7 +28,8 @@ service.interceptors.request.use(
 );
 
 service.interceptors.response.use(
-  (response: AxiosResponse) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (response: AxiosResponse): any => {
     const { code, message } = response.data;
 
     if (code === 200) {
@@ -63,3 +70,11 @@ service.interceptors.response.use(
 );
 
 export default service;
+
+export function typedPost<T>(url: string, data?: unknown) {
+  return service.post(url, data) as Promise<ApiResponse<T>>;
+}
+
+export function typedGet<T>(url: string) {
+  return service.get(url) as Promise<ApiResponse<T>>;
+}

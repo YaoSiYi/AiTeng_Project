@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import request from '@/utils/request';
+import { typedPost, typedGet } from '@/utils/request';
 
 interface UserInfo {
   id: number;
@@ -13,20 +13,30 @@ interface UserInfo {
   permissions: string[];
 }
 
+interface LoginData {
+  token: string;
+  user: UserInfo;
+}
+
 export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(localStorage.getItem('token'));
   const userInfo = ref<UserInfo | null>(null);
 
   const login = async (username: string, password: string) => {
-    const res: any = await request.post('/auth/login', { username, password });
+    const res = await typedPost<LoginData>('/auth/login', { username, password });
     token.value = res.data.token;
     userInfo.value = res.data.user;
     localStorage.setItem('token', res.data.token);
   };
 
   const getUserInfo = async () => {
-    const res: any = await request.get('/auth/userinfo');
-    userInfo.value = res.data;
+    try {
+      const res = await typedGet<UserInfo>('/auth/userinfo');
+      userInfo.value = res.data;
+    } catch (error) {
+      logout();
+      throw error;
+    }
   };
 
   const logout = () => {
