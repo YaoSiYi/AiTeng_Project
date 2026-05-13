@@ -110,96 +110,105 @@ export class OrderService {
   }
 
   async updateStatus(id: number, data: UpdateOrderStatusRequest, operatorId: number) {
-    const order = await prisma.order.findUnique({
-      where: { id },
-    });
-
-    if (!order) {
-      throw new AppError('订单不存在', 404);
-    }
-
-    if (order.orderStatus === 2 && data.orderStatus !== undefined && data.orderStatus !== 2) {
-      throw new AppError('已完成的订单不能修改状态', 400);
-    }
-
-    if (order.orderStatus === 3) {
-      throw new AppError('已取消的订单不能修改状态', 400);
-    }
-
-    const updateData: Prisma.OrderUpdateInput = {};
     if (data.shippingStatus !== undefined) {
       throw new AppError('发货状态请通过发货接口操作', 400);
     }
-    if (data.orderStatus !== undefined) updateData.orderStatus = data.orderStatus;
-    if (data.payStatus !== undefined) updateData.payStatus = data.payStatus;
 
-    if (data.payStatus === 1 && order.payStatus !== 1) {
-      updateData.payTime = Math.floor(Date.now() / 1000);
-    }
-
-    const [updated] = await prisma.$transaction([
-      prisma.order.update({
+    const updated = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
         where: { id },
-        data: updateData,
-      }),
-      prisma.orderAction.create({
-        data: {
-          orderId: id,
-          actionUser: operatorId,
-          actionNote: data.remark || '更新订单状态',
-          orderStatus: data.orderStatus ?? order.orderStatus,
-          payStatus: data.payStatus ?? order.payStatus,
-          shippingStatus: data.shippingStatus ?? order.shippingStatus,
-          logTime: Math.floor(Date.now() / 1000),
-        },
-      }),
-    ]);
+      });
+
+      if (!order) {
+        throw new AppError('订单不存在', 404);
+      }
+
+      if (order.orderStatus === 2 && data.orderStatus !== undefined && data.orderStatus !== 2) {
+        throw new AppError('已完成的订单不能修改状态', 400);
+      }
+
+      if (order.orderStatus === 3) {
+        throw new AppError('已取消的订单不能修改状态', 400);
+      }
+
+      const updateData: Prisma.OrderUpdateInput = {};
+      if (data.orderStatus !== undefined) updateData.orderStatus = data.orderStatus;
+      if (data.payStatus !== undefined) updateData.payStatus = data.payStatus;
+
+      if (data.payStatus === 1 && order.payStatus !== 1) {
+        updateData.payTime = Math.floor(Date.now() / 1000);
+      }
+
+      const [updatedOrder] = await Promise.all([
+        tx.order.update({
+          where: { id },
+          data: updateData,
+        }),
+        tx.orderAction.create({
+          data: {
+            orderId: id,
+            actionUser: operatorId,
+            actionNote: data.remark || '更新订单状态',
+            orderStatus: data.orderStatus ?? order.orderStatus,
+            payStatus: data.payStatus ?? order.payStatus,
+            shippingStatus: order.shippingStatus,
+            logTime: Math.floor(Date.now() / 1000),
+          },
+        }),
+      ]);
+
+      return updatedOrder;
+    });
 
     return updated;
   }
 
   async ship(id: number, data: ShipOrderRequest, operatorId: number) {
-    const order = await prisma.order.findUnique({
-      where: { id },
-    });
-
-    if (!order) {
-      throw new AppError('订单不存在', 404);
-    }
-
-    if (order.orderStatus === 3) {
-      throw new AppError('已取消的订单不能发货', 400);
-    }
-
-    if (order.shippingStatus === 1) {
-      throw new AppError('订单已发货', 400);
-    }
-
     const now = Math.floor(Date.now() / 1000);
 
-    const [updated] = await prisma.$transaction([
-      prisma.order.update({
+    const updated = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
         where: { id },
-        data: {
-          expressCode: data.expressCode,
-          expressNo: data.expressNo,
-          shippingName: data.shippingName,
-          shippingStatus: 1,
-          shippingTime: now,
-        },
-      }),
-      prisma.orderAction.create({
-        data: {
-          orderId: id,
-          actionUser: operatorId,
-          actionNote: `已发货，快递公司：${data.shippingName}，快递单号：${data.expressNo}`,
-          orderStatus: order.orderStatus,
-          payStatus: order.payStatus,
-          shippingStatus: 1,
-          logTime: now,
-        },
-      }),
-    ]);
+      });
+
+      if (!order) {
+        throw new AppError('订单不存在', 404);
+      }
+
+      if (order.orderStatus === 3) {
+        throw new AppError('已取消的订单不能发货', 400);
+      }
+
+      if (order.shippingStatus === 1) {
+        throw new AppError('订单已发货', 400);
+      }
+
+      const [updatedOrder] = await Promise.all([
+        tx.order.update({
+          where: { id },
+          data: {
+            expressCode: data.expressCode,
+            expressNo: data.expressNo,
+            shippingName: data.shippingName,
+            shippingStatus: 1,
+            shippingTime: now,
+          },
+        }),
+        tx.orderAction.create({
+          data: {
+            orderId: id,
+            actionUser: operatorId,
+            actionNote: `已发货，快递公司：${data.shippingName}，快递单号：${data.expressNo}`,
+            orderStatus: order.orderStatus,
+            payStatus: order.payStatus,
+            shippingStatus: 1,
+            logTime: now,
+          },
+        }),
+      ]);
+
+      return updatedOrder;
+    });
 
     return updated;
   }
