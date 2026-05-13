@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.49.0",
@@ -17,7 +16,6 @@
     "vue-router": "^4.2.4"
   },
   "devDependencies": {
-    "@arco-design/web-vue": "^2.49.0",
     "@types/node": "^20.4.5",
     "@vitejs/plugin-vue": "^4.2.3",
     "autoprefixer": "^10.4.14",
