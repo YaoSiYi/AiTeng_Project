@@ -1,49 +1,45 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import axios from 'axios';
+import request from '@/utils/request';
 
 interface UserInfo {
   id: number;
   username: string;
-  nickname: string;
-  email: string;
-  avatar: string;
+  nickname: string | null;
+  email: string | null;
+  avatar: string | null;
+  roleId: number;
+  roleName: string;
+  permissions: string[];
 }
 
 export const useUserStore = defineStore('user', () => {
-  const token = ref<string>(localStorage.getItem('token') || '');
+  const token = ref<string | null>(localStorage.getItem('token'));
   const userInfo = ref<UserInfo | null>(null);
 
   const login = async (username: string, password: string) => {
-    const response = await axios.post('/api/auth/login', { username, password });
-    const { data } = response.data;
-    token.value = data.token;
-    userInfo.value = data.userInfo;
-    localStorage.setItem('token', data.token);
-  };
-
-  const logout = () => {
-    token.value = '';
-    userInfo.value = null;
-    localStorage.removeItem('token');
+    const res: any = await request.post('/auth/login', { username, password });
+    token.value = res.data.token;
+    userInfo.value = res.data.user;
+    localStorage.setItem('token', res.data.token);
   };
 
   const getUserInfo = async () => {
-    if (!token.value) return;
-    try {
-      const response = await axios.get('/api/auth/userinfo');
-      userInfo.value = response.data.data;
-    } catch (error) {
-      logout();
-      throw error;
-    }
+    const res: any = await request.get('/auth/userinfo');
+    userInfo.value = res.data;
+  };
+
+  const logout = () => {
+    token.value = null;
+    userInfo.value = null;
+    localStorage.removeItem('token');
   };
 
   return {
     token,
     userInfo,
     login,
-    logout,
     getUserInfo,
+    logout,
   };
 });
