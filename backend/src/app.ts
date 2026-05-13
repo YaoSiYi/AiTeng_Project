@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { config } from './config';
 import { logger } from './utils/logger';
+import { AppError } from './utils/errors';
+import authRoutes from './routes/auth.routes';
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.use('/api/auth', authRoutes);
+
 app.use((req, res) => {
   res.status(404).json({
     code: 404,
@@ -37,8 +41,17 @@ app.use((req, res) => {
   });
 });
 
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
+
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      code: err.statusCode,
+      message: err.message,
+      data: null,
+    });
+  }
+
   res.status(500).json({
     code: 500,
     message: config.app.isDev ? err.message : '服务器内部错误',
