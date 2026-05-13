@@ -26,11 +26,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Sidebar from './components/Sidebar.vue';
 import Header from './components/Header.vue';
+import { useUserStore } from '@/stores/user';
 
 const collapsed = ref(false);
+const userStore = useUserStore();
+
+onMounted(async () => {
+  if (userStore.token && !userStore.userInfo) {
+    await userStore.getUserInfo();
+  }
+});
 </script>
 
 <style scoped>
