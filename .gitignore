@@ -45,3 +45,8 @@ TPshop_20171106_v2.0.9/
 
 # Large binary files
 *.mp4
+
+# Docker
+docker/nginx/ssl/
+docker/mysql/data/
+docker/redis/data/
