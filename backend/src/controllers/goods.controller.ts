@@ -9,7 +9,7 @@ export class GoodsController {
       const query: GoodsListQuery = {
         page: req.query.page ? Number(req.query.page) : undefined,
         pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
-        keyword: req.query.keyword as string,
+        keyword: req.query.keyword ? String(req.query.keyword) : undefined,
         categoryId: req.query.categoryId ? Number(req.query.categoryId) : undefined,
         brandId: req.query.brandId ? Number(req.query.brandId) : undefined,
         isOnSale: req.query.isOnSale ? Number(req.query.isOnSale) : undefined,
@@ -64,7 +64,7 @@ export class GoodsController {
     try {
       const id = parseInt(req.params.id);
       const { isOnSale } = req.body;
-      await goodsService.updateStatus(id, 'isOnSale', isOnSale);
+      await goodsService.updateOnSale(id, isOnSale);
       res.json(success(null, '状态更新成功'));
     } catch (error) {
       next(error);

@@ -37,3 +37,11 @@ export const updateGoodsSchema = createGoodsSchema.fork(
   ['goodsName', 'categoryId', 'goodsSn', 'shopPrice', 'marketPrice', 'costPrice'],
   (schema) => schema.optional()
 );
+
+export const updateOnSaleSchema = Joi.object({
+  isOnSale: Joi.number().valid(0, 1).required().messages({
+    'number.base': 'isOnSale必须是数字',
+    'any.only': 'isOnSale只能是0或1',
+    'any.required': 'isOnSale不能为空',
+  }),
+});

@@ -102,7 +102,7 @@ export class GoodsService {
       where: { id },
     });
 
-    if (!goods) {
+    if (!goods || goods.isDelete === 1) {
       throw new AppError('商品不存在', 404);
     }
 
@@ -114,7 +114,7 @@ export class GoodsService {
     return true;
   }
 
-  async updateStatus(id: number, field: string, value: number) {
+  async updateOnSale(id: number, isOnSale: number) {
     const goods = await prisma.goods.findUnique({
       where: { id },
     });
@@ -125,7 +125,7 @@ export class GoodsService {
 
     await prisma.goods.update({
       where: { id },
-      data: { [field]: value },
+      data: { isOnSale },
     });
 
     return true;
