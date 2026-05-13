@@ -6,5 +6,3 @@ export const updateConfigSchema = Joi.object()
   .messages({
     'object.min': '至少需要提供一个配置项',
   });
-
-export const updatePluginConfigSchema = Joi.object().unknown(true);

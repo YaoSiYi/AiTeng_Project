@@ -14,7 +14,7 @@ export class SystemService {
   }
 
   async updateConfig(data: Record<string, string>) {
-    const updates = Object.entries(data).map(async ([name, value]) => {
+    const updates = Object.entries(data).map(([name, value]) => {
       return prisma.config.upsert({
         where: { name },
         update: { value },
@@ -22,7 +22,7 @@ export class SystemService {
       });
     });
 
-    await Promise.all(updates);
+    await prisma.$transaction(updates);
     return true;
   }
 
@@ -64,9 +64,7 @@ export class SystemService {
       goodsCount,
       orderCount,
       version: '1.0.0',
-      nodeVersion: process.version,
-      platform: process.platform,
-      uptime: process.uptime(),
+      uptime: Math.floor(process.uptime()),
     };
   }
 }
